@@ -2,6 +2,70 @@
 #include <string.h>
 #include <malloc.h>
 #include <sys/statfs.h>
+#include <pthread.h>
+#include <stdatomic.h>
+
+#define THREADS 10
+
+typedef struct Threadparameter {
+
+    int *optimalbuffersize;
+
+    FILE *file;
+
+    atomic_long *counter;
+
+} Threadparameter;
+
+int read_data(char *buffer, int optimalbuffersize, FILE *file) {
+
+    int nread;
+
+    /*flockfile(file);*/
+
+    nread = fread(buffer, sizeof(char), optimalbuffersize, file);
+
+    /*funlockfile(file);*/
+
+    return nread;
+
+}
+
+
+void *readbuffer(void *parameters) {
+
+    Threadparameter *params = (Threadparameter*) parameters;
+
+    FILE *file = params->file;
+
+    int *optimalbuffersize = params->optimalbuffersize;
+
+    atomic_long *count = params->counter;
+
+    char *buffer = (char*) malloc(*optimalbuffersize * sizeof(char));
+
+    int nread;
+
+    while(nread = fread(buffer, sizeof(char), *optimalbuffersize, file))
+    {
+
+        nread++;
+
+        while(nread--) {
+
+            if(buffer[nread] == '\n')
+            {
+                atomic_fetch_add(count, 1);
+                
+            }
+
+        }
+
+    }
+
+    free(buffer);
+
+}
 
 int main(int argc, char const *argv[]) {
 
@@ -20,7 +84,7 @@ int main(int argc, char const *argv[]) {
 
     int fd = fileno(file);
 
-    long optimalbuffersize;
+    int optimalbuffersize;
 
     optimalbuffersize = 1024 * 1024;
 
@@ -31,10 +95,6 @@ int main(int argc, char const *argv[]) {
 
     }
 
-    char *buffer = (char*) malloc(sizeof(char) * optimalbuffersize);
-
-    int nread;
-
     if(!file) {
 
         printf("Couldn't open file\n");
@@ -42,27 +102,33 @@ int main(int argc, char const *argv[]) {
         return -1;
     }
 
-    long count = 0;
+    atomic_long count = 0;
 
-    while(nread = fread(buffer, 1, optimalbuffersize, file))
+    Threadparameter *params = (Threadparameter*) malloc(sizeof(Threadparameter));
+
+    params->file = file;
+
+    params->counter = &count;
+
+    params->optimalbuffersize = &optimalbuffersize;
+
+    pthread_t thread1, thread2, thread3, thread4;
+
+    pthread_t *threads = (pthread_t*)malloc(sizeof(pthread_t) * THREADS);
+
+    for(unsigned char loop = 0; loop < THREADS; loop++)
     {
-        nread++;
+        pthread_create(&threads[loop], NULL, readbuffer, (void*) params);
 
-        while(nread--) {
-
-            if(buffer[nread] == '\n')
-    
-                count++;
-
-        }
-
+        pthread_join(threads[loop], NULL);
     }
+
 
     printf("%ld\n",count);
 
     fclose(file);
 
-    free(buffer);
+    free(params);
 
     return 0;
 }
