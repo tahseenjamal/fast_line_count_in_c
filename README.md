@@ -9,10 +9,8 @@ gcc -O3 -lpthread -o main main.c
 
 time ./main FILENAME
 
+You can compare it with compare with wc like
 
-compare with wc like
-
-
-time wc FILENAME
+time wc -l FILENAME
 
 
