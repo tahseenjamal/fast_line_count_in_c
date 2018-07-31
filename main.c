@@ -99,8 +99,6 @@ int main(int argc, char const *argv[]) {
 
     params->optimalbuffersize = &optimalbuffersize;
 
-    pthread_t thread1, thread2, thread3, thread4;
-
     pthread_t *threads = (pthread_t*)malloc(sizeof(pthread_t) * THREADS);
 
     for(unsigned char loop = 0; loop < THREADS; loop++)
