@@ -17,19 +17,6 @@ typedef struct Threadparameter {
 
 } Threadparameter;
 
-int read_data(char *buffer, int optimalbuffersize, FILE *file) {
-
-    int nread;
-
-    /*flockfile(file);*/
-
-    nread = fread(buffer, sizeof(char), optimalbuffersize, file);
-
-    /*funlockfile(file);*/
-
-    return nread;
-
-}
 
 
 void *readbuffer(void *parameters) {
@@ -127,6 +114,8 @@ int main(int argc, char const *argv[]) {
     printf("%ld\n",count);
 
     fclose(file);
+
+    free(threads);
 
     free(params);
 
