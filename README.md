@@ -7,6 +7,10 @@ how to compile
 
 gcc -O3 -lpthread -o main main.c 
 
+for Ubuntu use
+
+gcc -O3 -pthread -o main main.c
+
 time ./main FILENAME
 
 You can compare it with compare with wc like
